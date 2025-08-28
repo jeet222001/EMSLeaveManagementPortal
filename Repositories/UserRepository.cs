@@ -1,15 +1,31 @@
-﻿using EMSLeaveManagementPortal.Entities;
+﻿using EMSLeaveManagementPortal.Data;
+using EMSLeaveManagementPortal.Entities;
 
 namespace EMSLeaveManagementPortal.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly List<User> _users = new();
+        private readonly AppDbContext _context;
 
-        public User GetByUsername(string username) => _users.FirstOrDefault(u => u.Username == username);
+        public UserRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
-        public void Add(User user) => _users.Add(user);
+        public User GetByUsername(string username)
+        {
+            return _context.Users.FirstOrDefault(u => u.Username == username);
+        }
 
-        public IEnumerable<User> GetAll() => _users;
+        public void Add(User user)
+        {
+            _context.Users.Add(user);
+            _context.SaveChanges();
+        }
+
+        public IEnumerable<User> GetAll()
+        {
+            return _context.Users.ToList();
+        }
     }
 }
