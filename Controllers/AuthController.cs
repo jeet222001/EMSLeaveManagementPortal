@@ -23,34 +23,58 @@ namespace EMSLeaveManagementPortal.Controllers
         [HttpPost("signup")]
         public IActionResult SignUp(SignUpDto dto)
         {
-            if (_userRepo.GetByUsername(dto.Username) != null)
-                return BadRequest("Username already exists.");
-
-            PasswordHelper.CreatePasswordHash(dto.Password, out var hash, out var salt);
-
-            var user = new User
+            try
             {
-                Id = Guid.NewGuid(),
-                Username = dto.Username,
-                PasswordHash = hash,
-                PasswordSalt = salt,
-                Role = dto.Role
-            };
+                if (_userRepo.GetByUsername(dto.Username) != null)
+                    return BadRequest(new ApiResponseDto<object>(false, "Username already exists.", null, 400));
 
-            _userRepo.Add(user);
+                PasswordHelper.CreatePasswordHash(dto.Password, out var hash, out var salt);
 
-            return Ok("User registered successfully.");
+                var user = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Username = dto.Username,
+                    PasswordHash = hash,
+                    PasswordSalt = salt,
+                    Role = dto.Role,
+                    Name = dto.Name
+                };
+
+                _userRepo.Add(user);
+
+                return Ok(new ApiResponseDto<object>(true, "User registered successfully.", null, 200));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponseDto<object>(false, ex.Message, null, 500));
+            }
         }
 
         [HttpPost("signin")]
         public IActionResult SignIn(SignInDto dto)
         {
-            var user = _userRepo.GetByUsername(dto.Username);
-            if (user == null || !PasswordHelper.VerifyPassword(dto.Password, user.PasswordHash, user.PasswordSalt))
-                return Unauthorized("Invalid credentials.");
+            try
+            {
+                var user = _userRepo.GetByUsername(dto.Username);
+                if (user == null || !PasswordHelper.VerifyPassword(dto.Password, user.PasswordHash, user.PasswordSalt))
+                    return Unauthorized(new ApiResponseDto<object>(false, "Invalid credentials.", null, 401));
 
-            var token = _tokenService.CreateToken(user);
-            return Ok(new { token });
+                var token = _tokenService.CreateToken(user);
+                // Exclude password hash and salt from response
+                var userResponse = new
+                {
+                    user.Id,
+                    user.Username,
+                    user.Name,
+                    user.Role
+                };
+                var responseData = new { token, user = userResponse };
+                return Ok(new ApiResponseDto<object>(true, "Sign in successful.", responseData, 200));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponseDto<object>(false, ex.Message, null, 500));
+            }
         }
     }
 }
