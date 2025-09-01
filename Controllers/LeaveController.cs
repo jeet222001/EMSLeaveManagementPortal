@@ -1,8 +1,10 @@
 ﻿using EMSLeaveManagementPortal.DTOs;
 using EMSLeaveManagementPortal.Entities;
 using EMSLeaveManagementPortal.Repositories;
+using EMSLeaveManagementPortal.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mail;
 using System.Security.Claims;
 
 namespace EMSLeaveManagementPortal.Controllers;
@@ -13,11 +15,15 @@ public class LeaveController : ControllerBase
 {
     private readonly ILeaveRepository _leaveRepo;
     private readonly IUserRepository _userRepo;
+    private readonly IEmailService _emailService;
 
-    public LeaveController(ILeaveRepository leaveRepo, IUserRepository userRepo)
+    public LeaveController(ILeaveRepository leaveRepo,
+        IUserRepository userRepo,
+        IEmailService emailService)
     {
         _leaveRepo = leaveRepo;
         _userRepo = userRepo;
+        _emailService = emailService;
     }
 
     [Authorize(Roles = "Admin,Employee")]
@@ -44,6 +50,16 @@ public class LeaveController : ControllerBase
                 Status = LeaveStatus.Pending
             };
             await _leaveRepo.AddAsync(leave);
+            // Send email notification to user
+            var user = await _userRepo.GetAllAsync();
+            var applicant = user.FirstOrDefault(u => u.Id == userId);
+            if (applicant != null)
+            {
+                var subject = "Leave Application Submitted";
+                var body = $"Dear {applicant.Name},\n\nYour leave application from {leave.StartDate:yyyy-MM-dd} to {leave.EndDate:yyyy-MM-dd} has been submitted and is pending approval.\n\nReason: {leave.Reason}\nType: {leave.Type}\n";
+                await _emailService.SendEmailAsync(applicant.Username, subject, body);
+            }
+
             return Ok(new ApiResponseDto<Leave>(true, "Leave applied successfully.", leave, 200));
         }
         catch (Exception ex)
@@ -71,6 +87,15 @@ public class LeaveController : ControllerBase
                 leave.Status = LeaveStatus.Rejected;
             }
             await _leaveRepo.UpdateAsync(leave);
+            // Send email notification to user
+            var user = await _userRepo.GetAllAsync();
+            var applicant = user.FirstOrDefault(u => u.Id == leave.UserId);
+            if (applicant != null)
+            {
+                var subject = $"Leave Application {(leave.Status == LeaveStatus.Approved ? "Approved" : "Rejected")}";
+                var body = $"Dear {applicant.Name},\n\nYour leave application from {leave.StartDate:yyyy-MM-dd} to {leave.EndDate:yyyy-MM-dd} has been {leave.Status}.\n\nReason: {leave.Reason}\nType: {leave.Type}\n";
+                await _emailService.SendEmailAsync(applicant.Username, subject, body);
+            }
             return Ok(new ApiResponseDto<Leave>(true, "Leave status updated.", leave, 200));
         }
         catch (Exception ex)
