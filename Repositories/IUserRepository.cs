@@ -4,7 +4,9 @@ namespace EMSLeaveManagementPortal.Repositories;
 
 public interface IUserRepository
 {
-    User GetByUsername(string username);
-    void Add(User user);
-    IEnumerable<User> GetAll();
+    Task<User?> GetByUsernameAsync(string username);
+    Task AddAsync(User user);
+    Task<List<User>> GetAllAsync();
+    Task DeleteUserAsync(User user);
+    Task UpdateUserAsync(User user);
 }

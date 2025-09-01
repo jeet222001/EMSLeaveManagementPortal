@@ -1,5 +1,6 @@
 ﻿using EMSLeaveManagementPortal.Data;
 using EMSLeaveManagementPortal.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMSLeaveManagementPortal.Repositories;
 public class LeaveRepository : ILeaveRepository
@@ -11,62 +12,61 @@ public class LeaveRepository : ILeaveRepository
         _context = context;
     }
 
-    public void Add(Leave leave)
+    public async Task AddAsync(Leave leave)
     {
-        _context.Leaves.Add(leave);
-        _context.SaveChanges();
+        await _context.Leaves.AddAsync(leave);
+        await _context.SaveChangesAsync();
     }
 
-    public Leave GetById(Guid id)
+    public async Task<Leave?> GetByIdAsync(Guid id)
     {
-        return _context.Leaves.Find(id);
+        return await _context.Leaves.FindAsync(id);
     }
 
-    public IEnumerable<Leave> GetByUserId(Guid userId)
+    public async Task<List<Leave>> GetByUserIdAsync(Guid userId)
     {
-        return _context.Leaves.Where(l => l.UserId == userId).ToList();
+        return await _context.Leaves.Where(l => l.UserId == userId).ToListAsync();
     }
 
-    public IEnumerable<Leave> GetAll()
+    public async Task<List<Leave>> GetAllAsync()
     {
-        return _context.Leaves.ToList();
+        return await _context.Leaves.ToListAsync();
     }
 
-    public void Update(Leave leave)
+    public async Task UpdateAsync(Leave leave)
     {
         _context.Leaves.Update(leave);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public void Delete(Guid id)
+    public async Task DeleteAsync(Guid id)
     {
-        var leave = _context.Leaves.Find(id);
+        var leave = await _context.Leaves.FindAsync(id);
         if (leave != null)
         {
             _context.Leaves.Remove(leave);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
-    // Example for EF Core
-    public LeaveBalance GetLeaveBalance(Guid userId, LeaveType type)
+    public async Task<LeaveBalance?> GetLeaveBalanceAsync(Guid userId, LeaveType type)
     {
-        return _context.LeaveBalances.FirstOrDefault(lb => lb.UserId == userId && lb.Type == type);
+        return await _context.LeaveBalances.FirstOrDefaultAsync(lb => lb.UserId == userId && lb.Type == type);
     }
 
-    public void UpdateLeaveBalance(LeaveBalance balance)
+    public async Task UpdateLeaveBalanceAsync(LeaveBalance balance)
     {
         _context.LeaveBalances.Update(balance);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public void AddLeaveBalance(LeaveBalance balance)
+    public async Task AddLeaveBalanceAsync(LeaveBalance balance)
     {
-        _context.LeaveBalances.Add(balance);
-        _context.SaveChanges();
+        await _context.LeaveBalances.AddAsync(balance);
+        await _context.SaveChangesAsync();
     }
 
-    public IEnumerable<LeaveBalance> GetLeaveBalancesByUser(Guid userId)
+    public async Task<List<LeaveBalance>> GetLeaveBalancesByUserAsync(Guid userId)
     {
-        return _context.LeaveBalances.Where(lb => lb.UserId == userId).ToList();
+        return await _context.LeaveBalances.Where(lb => lb.UserId == userId).ToListAsync();
     }
 }

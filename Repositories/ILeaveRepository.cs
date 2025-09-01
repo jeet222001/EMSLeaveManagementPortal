@@ -3,15 +3,14 @@
 namespace EMSLeaveManagementPortal.Repositories;
 public interface ILeaveRepository
 {
-    void Add(Leave leave);
-    Leave GetById(Guid id);
-    IEnumerable<Leave> GetByUserId(Guid userId);
-    IEnumerable<Leave> GetAll();
-    void Update(Leave leave);
-    void Delete(Guid id);
-    LeaveBalance GetLeaveBalance(Guid userId, LeaveType type);
-    void UpdateLeaveBalance(LeaveBalance balance);
-    void AddLeaveBalance(LeaveBalance balance);
-    IEnumerable<LeaveBalance> GetLeaveBalancesByUser(Guid userId);
-
+    Task AddAsync(Leave leave);
+    Task<Leave?> GetByIdAsync(Guid id);
+    Task<List<Leave>> GetByUserIdAsync(Guid userId);
+    Task<List<Leave>> GetAllAsync();
+    Task UpdateAsync(Leave leave);
+    Task DeleteAsync(Guid id);
+    Task<LeaveBalance?> GetLeaveBalanceAsync(Guid userId, LeaveType type);
+    Task UpdateLeaveBalanceAsync(LeaveBalance balance);
+    Task AddLeaveBalanceAsync(LeaveBalance balance);
+    Task<List<LeaveBalance>> GetLeaveBalancesByUserAsync(Guid userId);
 }

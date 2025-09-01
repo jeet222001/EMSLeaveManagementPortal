@@ -4,6 +4,7 @@ using EMSLeaveManagementPortal.Helpers;
 using EMSLeaveManagementPortal.Repositories;
 using EMSLeaveManagementPortal.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace EMSLeaveManagementPortal.Controllers
 {
@@ -21,11 +22,11 @@ namespace EMSLeaveManagementPortal.Controllers
         }
 
         [HttpPost("signup")]
-        public IActionResult SignUp(SignUpDto dto)
+        public async Task<IActionResult> SignUp(SignUpDto dto)
         {
             try
             {
-                if (_userRepo.GetByUsername(dto.Username) != null)
+                if (_userRepo.GetByUsernameAsync(dto.Username) != null)
                     return BadRequest(new ApiResponseDto<object>(false, "Username already exists.", null, 400));
 
                 PasswordHelper.CreatePasswordHash(dto.Password, out var hash, out var salt);
@@ -40,7 +41,7 @@ namespace EMSLeaveManagementPortal.Controllers
                     Name = dto.Name
                 };
 
-                _userRepo.Add(user);
+               await _userRepo.AddAsync(user);
 
                 return Ok(new ApiResponseDto<object>(true, "User registered successfully.", null, 200));
             }
@@ -51,17 +52,17 @@ namespace EMSLeaveManagementPortal.Controllers
         }
 
         [HttpPost("signin")]
-        public IActionResult SignIn(SignInDto dto)
+        public async Task<IActionResult> SignIn(SignInDto dto)
         {
             try
             {
-                var user = _userRepo.GetByUsername(dto.Username);
+                var user = await _userRepo.GetByUsernameAsync(dto.Username);
                 if (user == null || !PasswordHelper.VerifyPassword(dto.Password, user.PasswordHash, user.PasswordSalt))
                     return Unauthorized(new ApiResponseDto<object>(false, "Invalid credentials.", null, 401));
 
                 var token = _tokenService.CreateToken(user);
                 // Exclude password hash and salt from response
-                var userResponse = new
+                var userResponse = new 
                 {
                     user.Id,
                     user.Username,

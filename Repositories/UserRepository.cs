@@ -1,5 +1,6 @@
 ﻿using EMSLeaveManagementPortal.Data;
 using EMSLeaveManagementPortal.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMSLeaveManagementPortal.Repositories
 {
@@ -12,20 +13,32 @@ namespace EMSLeaveManagementPortal.Repositories
             _context = context;
         }
 
-        public User GetByUsername(string username)
+        public async Task<User?> GetByUsernameAsync(string username)
         {
-            return _context.Users.FirstOrDefault(u => u.Username == username);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        public void Add(User user)
+        public async Task AddAsync(User user)
         {
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
         }
 
-        public IEnumerable<User> GetAll()
+        public async Task<List<User>> GetAllAsync()
         {
-            return _context.Users.ToList();
+            return await _context.Users.ToListAsync();
+        }
+
+        public async Task DeleteUserAsync(User user)
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
         }
     }
 }
