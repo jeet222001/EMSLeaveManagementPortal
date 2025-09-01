@@ -1,0 +1,6 @@
+@EMSLeaveManagementPortal_HostAddress = http://localhost:5039
+
+GET {{EMSLeaveManagementPortal_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
