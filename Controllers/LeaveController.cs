@@ -130,12 +130,12 @@ public class LeaveController : ControllerBase
         try
         {
             var leaves = await _leaveRepo.GetAllAsync();
+            var users = await _userRepo.GetAllAsync();
 
             // Email filter (requires user lookup)
             if (!string.IsNullOrWhiteSpace(search))
             {
-                // Get users matching the search string in email
-                var matchedUsers = (await _userRepo.GetAllAsync())
+                var matchedUsers = users
                     .Where(u => u.Username.Contains(search, StringComparison.OrdinalIgnoreCase))
                     .Select(u => u.Id)
                     .ToList();
@@ -161,10 +161,27 @@ public class LeaveController : ControllerBase
                 "enddate" => leaves.OrderBy(l => l.EndDate).ToList(),
                 "type" => leaves.OrderBy(l => l.Type).ToList(),
                 "status" => leaves.OrderBy(l => l.Status).ToList(),
-                _ => leaves.OrderByDescending(l => l.StartDate).ToList() // Default sort
+                _ => leaves.OrderByDescending(l => l.StartDate).ToList()
             };
 
-            return Ok(new ApiResponseDto<IEnumerable<Leave>>(true, "Leaves fetched successfully.", leaves, 200));
+            // Map leaves to DTO including UserName
+            var leaveDtos = leaves.Select(l =>
+            {
+                var user = users.FirstOrDefault(u => u.Id == l.UserId);
+                return new
+                {
+                    l.Id,
+                    l.UserId,
+                    UserName = user?.Username,
+                    l.StartDate,
+                    l.EndDate,
+                    l.Reason,
+                    l.Type,
+                    l.Status
+                };
+            }).ToList();
+
+            return Ok(new ApiResponseDto<IEnumerable<object>>(true, "Leaves fetched successfully.", leaveDtos, 200));
         }
         catch (Exception ex)
         {
