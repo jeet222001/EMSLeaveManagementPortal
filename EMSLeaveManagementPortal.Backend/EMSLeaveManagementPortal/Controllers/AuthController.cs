@@ -26,7 +26,7 @@ namespace EMSLeaveManagementPortal.Controllers
         {
             try
             {
-                if (_userRepo.GetByUsernameAsync(dto.Username) != null)
+                if (await _userRepo.GetByUsernameAsync(dto.Username) != null)
                     return BadRequest(new ApiResponseDto<object>(false, "Username already exists.", null, 400));
 
                 PasswordHelper.CreatePasswordHash(dto.Password, out var hash, out var salt);
